@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hub de Conteúdo · Genial</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0e0e10;
+      --surface:   #18181b;
+      --border:    #27272a;
+      --muted:     #52525b;
+      --text:      #e4e4e7;
+      --subtle:    #a1a1aa;
+      --green:     #00b37e;
+      --green-dim: #00a36e;
+      --red:       #f87171;
+      --radius:    12px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* ── HEADER ── */
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    header .logo { font-size: 1.6rem; }
+    header h1   { font-size: 1.1rem; font-weight: 700; letter-spacing: -.3px; }
+    header p    { font-size: 0.78rem; color: var(--subtle); margin-top: 1px; }
+
+    /* ── SIDEBAR ── */
+    aside {
+      border-right: 1px solid var(--border);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--surface);
+    }
+    aside h2 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .agent-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      user-select: none;
+    }
+    .agent-card:hover { border-color: var(--muted); }
+    .agent-card.selected {
+      border-color: var(--green);
+      background: rgba(0,179,126,.07);
+    }
+    .agent-card input[type="checkbox"] { display: none; }
+    .agent-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .agent-info strong { display: block; font-size: 0.82rem; font-weight: 600; }
+    .agent-info span   { font-size: 0.74rem; color: var(--subtle); line-height: 1.4; }
+
+    .sidebar-hint {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .sidebar-hint code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-size: 0.72rem;
+      color: var(--green);
+    }
+
+    /* ── MAIN ── */
+    main {
+      display: flex;
+      flex-direction: column;
+      padding: 28px 32px;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .input-area {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .input-area label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--subtle);
+    }
+    textarea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      padding: 14px 16px;
+      resize: vertical;
+      min-height: 120px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    textarea:focus { border-color: var(--green); }
+    textarea::placeholder { color: var(--muted); }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    button#run {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 11px 28px;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    button#run:hover:not(:disabled)  { background: var(--green-dim); }
+    button#run:disabled { opacity: .45; cursor: not-allowed; }
+
+    button#clear {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--subtle);
+      font-size: 0.85rem;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    button#clear:hover { border-color: var(--muted); color: var(--text); }
+
+    #status {
+      font-size: 0.8rem;
+      color: var(--subtle);
+      margin-left: auto;
+    }
+
+    /* ── RESULTS ── */
+    #results { display: flex; flex-direction: column; gap: 0; }
+
+    .agent-block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .agent-header .icon  { font-size: 1.1rem; }
+    .agent-header .name  { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+    .agent-header .dot   {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      margin-left: auto;
+      animation: pulse 1.2s infinite;
+    }
+    .agent-header .dot.done { background: var(--muted); animation: none; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: .3; }
+    }
+
+    .agent-body {
+      padding: 18px 20px;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+      min-height: 60px;
+    }
+
+    /* Markdown-like rendering */
+    .agent-body strong { color: #fff; }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 60px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .empty-state .big-icon { font-size: 3rem; opacity: .5; }
+    .empty-state p { font-size: 0.85rem; max-width: 320px; line-height: 1.6; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 560px;
+    }
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .preview-card .pi { font-size: 1.8rem; margin-bottom: 6px; }
+    .preview-card .pt { font-size: 0.8rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .preview-card .pd { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+
+    .error-msg {
+      background: rgba(248,113,113,.08);
+      border: 1px solid rgba(248,113,113,.3);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      color: var(--red);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">💹</div>
+    <div>
+      <h1>Hub de Criação de Conteúdo</h1>
+      <p>Genial Investimentos · Agentes Especializados</p>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside>
+    <h2>Agentes</h2>
+
+    <label class="agent-card" data-key="biblioteca">
+      <input type="checkbox" value="biblioteca" />
+      <span class="agent-icon">📚</span>
+      <span class="agent-info">
+        <strong>Biblioteca Virtual</strong>
+        <span>Produtos, regras e informações institucionais</span>
+      </span>
+    </label>
+
+    <label class="agent-card" data-key="secretario">
+      <input type="checkbox" value="secretario" />
+      <span class="agent-icon">📋</span>
+      <span class="agent-info">
+        <strong>Secretário de Conteúdo</strong>
+        <span>Briefings, calendário e organização de demandas</span>
+      </span>
+    </label>
+
+    <label class="agent-card" data-key="redator">
+      <input type="checkbox" value="redator" />
+      <span class="agent-icon">✍️</span>
+      <span class="agent-info">
+        <strong>Redator de Comunicação</strong>
+        <span>E-mail, push notification e WhatsApp</span>
+      </span>
+    </label>
+
+    <label class="agent-card" data-key="jornalista">
+      <input type="checkbox" value="jornalista" />
+      <span class="agent-icon">📰</span>
+      <span class="agent-info">
+        <strong>Jornalista de Mercado</strong>
+        <span>Cenário econômico e ganchos de conteúdo</span>
+      </span>
+    </label>
+
+    <div class="sidebar-hint">
+      Selecione um ou mais agentes, escreva seu pedido e clique em <strong>Executar</strong>.<br/><br/>
+      Servidor: <code>uvicorn server:app --reload</code>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="input-area">
+      <label for="pedido">Pedido</label>
+      <textarea
+        id="pedido"
+        placeholder="Ex: Traga as principais notícias sobre a Selic hoje e crie um push notification comunicando o impacto para os clientes da Genial."
+      ></textarea>
+    </div>
+
+    <div class="actions">
+      <button id="run" disabled>▶ Executar</button>
+      <button id="clear">Limpar</button>
+      <span id="status"></span>
+    </div>
+
+    <div id="results">
+      <!-- empty state inicial -->
+      <div class="empty-state" id="empty">
+        <div class="big-icon">💹</div>
+        <p>Selecione os agentes no menu lateral e escreva seu pedido para começar.</p>
+        <div class="cards-grid">
+          <div class="preview-card"><div class="pi">📚</div><div class="pt">Biblioteca</div><div class="pd">Fonte de verdade sobre a Genial</div></div>
+          <div class="preview-card"><div class="pi">📋</div><div class="pt">Secretário</div><div class="pd">Briefings e calendário editorial</div></div>
+          <div class="preview-card"><div class="pi">✍️</div><div class="pt">Redator</div><div class="pd">Copy para todos os canais</div></div>
+          <div class="preview-card"><div class="pi">📰</div><div class="pt">Jornalista</div><div class="pd">Análise e ganchos de conteúdo</div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const AGENT_META = {
+      biblioteca: { icon: '📚', name: 'Biblioteca Virtual' },
+      secretario:  { icon: '📋', name: 'Secretário de Conteúdo' },
+      redator:     { icon: '✍️',  name: 'Redator de Comunicação' },
+      jornalista:  { icon: '📰', name: 'Jornalista de Mercado' },
+    };
+
+    const cards    = document.querySelectorAll('.agent-card');
+    const pedidoEl = document.getElementById('pedido');
+    const runBtn   = document.getElementById('run');
+    const clearBtn = document.getElementById('clear');
+    const statusEl = document.getElementById('status');
+    const results  = document.getElementById('results');
+    const empty    = document.getElementById('empty');
+
+    // ── seleção de agentes ──────────────────────────────────────────────────
+    function selectedAgents() {
+      return [...cards]
+        .filter(c => c.querySelector('input').checked)
+        .map(c => c.dataset.key);
+    }
+
+    function updateRunBtn() {
+      const hasAgents = selectedAgents().length > 0;
+      const hasPedido = pedidoEl.value.trim().length > 0;
+      runBtn.disabled = !(hasAgents && hasPedido);
+    }
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        const cb = card.querySelector('input');
+        cb.checked = !cb.checked;
+        card.classList.toggle('selected', cb.checked);
+        updateRunBtn();
+      });
+    });
+
+    pedidoEl.addEventListener('input', updateRunBtn);
+
+    // ── bloco de resposta ───────────────────────────────────────────────────
+    function createAgentBlock(key) {
+      const { icon, name } = AGENT_META[key];
+      const block = document.createElement('div');
+      block.className = 'agent-block';
+      block.id = `block-${key}`;
+      block.innerHTML = `
+        <div class="agent-header">
+          <span class="icon">${icon}</span>
+          <span class="name">${name}</span>
+          <span class="dot" id="dot-${key}"></span>
+        </div>
+        <div class="agent-body" id="body-${key}"></div>
+      `;
+      return block;
+    }
+
+    // Converte markdown básico em HTML
+    function renderMarkdown(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code style="background:#18181b;border:1px solid #27272a;border-radius:4px;padding:1px 6px;font-size:.85em;color:#00b37e">$1</code>')
+        .replace(/^#{1,3} (.+)$/gm, '<strong style="font-size:1rem;display:block;margin-top:.5em;color:#fff">$1</strong>')
+        .replace(/^[-•] (.+)$/gm, '  • $1');
+    }
+
+    // ── execução principal ──────────────────────────────────────────────────
+    runBtn.addEventListener('click', async () => {
+      const agents = selectedAgents();
+      const pedido = pedidoEl.value.trim();
+      if (!agents.length || !pedido) return;
+
+      // Limpar resultados anteriores
+      results.innerHTML = '';
+      setStatus('Iniciando…');
+      runBtn.disabled = true;
+
+      // Criar blocos (vazio) para cada agente
+      agents.forEach(key => results.appendChild(createAgentBlock(key)));
+
+      // Textos acumulados por agente
+      const texts = {};
+      agents.forEach(k => texts[k] = '');
+
+      let currentKey = null;
+
+      try {
+        const resp = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agents, pedido }),
+        });
+
+        if (!resp.ok) throw new Error(`Servidor respondeu ${resp.status}`);
+
+        const reader  = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let   buffer  = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // guarda fragmento incompleto
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            let evt;
+            try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+
+            if (evt.event === 'agent_start') {
+              currentKey = evt.agent;
+              setStatus(`${AGENT_META[evt.agent].icon} ${evt.display}…`);
+
+            } else if (evt.event === 'chunk' && currentKey) {
+              texts[currentKey] += evt.text;
+              const body = document.getElementById(`body-${currentKey}`);
+              if (body) body.innerHTML = renderMarkdown(texts[currentKey]);
+              // auto-scroll suave
+              body?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+            } else if (evt.event === 'agent_end' && evt.agent) {
+              const dot = document.getElementById(`dot-${evt.agent}`);
+              if (dot) dot.classList.add('done');
+
+            } else if (evt.event === 'done') {
+              setStatus('✅ Concluído');
+              runBtn.disabled = false;
+
+            } else if (evt.event === 'error') {
+              showError(evt.message);
+              setStatus('');
+              runBtn.disabled = false;
+            }
+          }
+        }
+
+      } catch (err) {
+        showError(err.message);
+        setStatus('');
+        runBtn.disabled = false;
+      }
+    });
+
+    // ── limpar ──────────────────────────────────────────────────────────────
+    clearBtn.addEventListener('click', () => {
+      results.innerHTML = '';
+      results.appendChild(empty);
+      pedidoEl.value = '';
+      setStatus('');
+      updateRunBtn();
+    });
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    function showError(msg) {
+      const div = document.createElement('div');
+      div.className = 'error-msg';
+      div.textContent = `Erro: ${msg}`;
+      results.prepend(div);
+    }
+  </script>
+</body>
+</html>
