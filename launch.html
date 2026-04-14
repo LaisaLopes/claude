@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hub de Conteúdo · Genial</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #121214;
+      color: #E1E1E6;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 24px;
+    }
+    .logo { font-size: 3rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; }
+    p  { font-size: 0.9rem; color: #8D8D99; }
+    a.btn {
+      display: inline-block;
+      background: #00B37E;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 14px 36px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    a.btn:hover { background: #00A36E; }
+    .hint {
+      font-size: 0.78rem;
+      color: #48484E;
+      text-align: center;
+      max-width: 340px;
+      line-height: 1.5;
+    }
+    code {
+      background: #1C1C1F;
+      border: 1px solid #29292E;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      color: #00B37E;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">💹</div>
+  <h1>Hub de Criação de Conteúdo</h1>
+  <p>Genial Investimentos · Agentes Especializados</p>
+
+  <a class="btn" href="http://localhost:8501" target="_blank">
+    ▶ Abrir o Hub
+  </a>
+
+  <p class="hint">
+    Antes de abrir, certifique-se de que o servidor está rodando:<br/>
+    <code>streamlit run app.py</code>
+  </p>
+</body>
+</html>
